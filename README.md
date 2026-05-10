@@ -46,11 +46,19 @@ pip install -r requirements.txt
 ## Running the Server
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --port 8001
 ```
+## Demo Commands (PowerShell)
 
-The API will be available at `http://127.0.0.1:8000`.  
-Interactive docs: `http://127.0.0.1:8000/docs`
+Invoke-WebRequest -Uri "http://localhost:8001/health"
+
+Invoke-WebRequest -Uri "http://localhost:8001/circuit/force-open" -Method Post
+
+Invoke-WebRequest -Uri "http://localhost:8001/ask" -Method Post -Body '{"prompt":"test"}' -ContentType "application/json"
+
+Invoke-WebRequest -Uri "http://localhost:8001/health"
+
+Invoke-WebRequest -Uri "http://localhost:8001/circuit/reset" -Method Post
 
 ---
 
@@ -66,16 +74,11 @@ pytest tests/ -v --tb=short
 
 ---
 
-## Simulating LLM Failure (for demo)
+## Simulating LLM Failure
 
 ```bash
-# Start server with LLM failure simulation enabled
-LLM_SIMULATE_FAILURE=true uvicorn app.main:app --reload
+LLM_SIMULATE_FAILURE=true uvicorn app.main:app --reload --port 8001
 ```
-
-With this flag set, every call to the real LLM endpoint is replaced by a
-simulated timeout. The circuit breaker will trip after 3 attempts and all
-subsequent requests will receive an instant fallback response.
 
 ---
 
@@ -91,30 +94,3 @@ subsequent requests will receive an instant fallback response.
 | `POST` | `/circuit/force-open` | Force circuit to OPEN (demo use) |
 
 ---
-
-## Verifying the X-Student-ID Header
-
-```bash
-# Using curl
-curl -I http://127.0.0.1:8000/
-# Look for: x-student-id: BSCS23130
-
-# Using curl with a POST
-curl -s -D - -X POST http://127.0.0.1:8000/ask \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "hello"}' | grep -i "x-student-id"
-
-# Expected output:
-# x-student-id: BSCS23130
-```
-
----
-
-## Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `LLM_API_URL` | OpenAI endpoint | URL of the LLM API |
-| `LLM_API_KEY` | `sk-placeholder` | LLM API key |
-| `LLM_TIMEOUT_SECONDS` | `10` | Seconds before an LLM call times out |
-| `LLM_SIMULATE_FAILURE` | `false` | Set `true` to simulate LLM timeout |
